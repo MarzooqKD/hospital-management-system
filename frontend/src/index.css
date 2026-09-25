@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Deep navy — sidebar, login panel, primary buttons/headings on white.
+     Custom scale: Tailwind's slate/indigo don't quite hit this hue. */
+  --color-navy-950: #0a1730;
+  --color-navy-900: #0e1e3d;
+  --color-navy-800: #16295a;
+  --color-navy-700: #1f3568;
+  --color-navy-600: #2c4483;
+
+  /* Bright cyan-teal — accent/highlight color: active states, small
+     contextual CTAs, selected slots. Close to Tailwind's teal-400/500,
+     tuned a touch brighter/cooler to match the reference. */
+  --color-accent-300: #7fe3dc;
+  --color-accent-400: #35d6c9;
+  --color-accent-500: #13b8ab;
+  --color-accent-600: #0e9c91;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
