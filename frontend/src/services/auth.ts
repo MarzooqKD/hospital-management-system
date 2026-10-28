@@ -6,11 +6,6 @@ export async function login(email: string, password: string): Promise<TokenPair>
   return data;
 }
 
-export async function refreshAccessToken(refresh: string): Promise<{ access: string }> {
-  const { data } = await api.post<{ access: string }>("/auth/token/refresh/", { refresh });
-  return data;
-}
-
 export async function logout(refresh: string): Promise<void> {
   await api.post("/auth/logout/", { refresh });
 }

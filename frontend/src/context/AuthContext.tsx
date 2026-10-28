@@ -7,11 +7,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { setAccessToken } from "../services/api";
+import {
+  getRefreshToken,
+  refreshSession,
+  setAccessToken,
+  setRefreshToken,
+  setSessionExpiredHandler,
+} from "../services/api";
 import * as authService from "../services/auth";
 import type { CurrentUser } from "../types/auth";
-
-const REFRESH_TOKEN_KEY = "hms_refresh_token";
 
 interface AuthContextValue {
   user: CurrentUser | null;
@@ -27,29 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!storedRefresh) {
+    setSessionExpiredHandler(() => setUser(null));
+    return () => setSessionExpiredHandler(null);
+  }, []);
+
+  useEffect(() => {
+    if (!getRefreshToken()) {
       setInitializing(false);
       return;
     }
 
-    authService
-      .refreshAccessToken(storedRefresh)
-      .then(({ access }) => {
-        setAccessToken(access);
-        return authService.fetchCurrentUser();
-      })
+    refreshSession()
+      .then(() => authService.fetchCurrentUser())
       .then(setUser)
-      .catch(() => {
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        setAccessToken(null);
-      })
+      .catch(() => setAccessToken(null))
       .finally(() => setInitializing(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const tokens = await authService.login(email, password);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh);
+    setRefreshToken(tokens.refresh);
     setAccessToken(tokens.access);
     const currentUser = await authService.fetchCurrentUser();
     setUser(currentUser);
@@ -57,13 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
+    const storedRefresh = getRefreshToken();
     if (storedRefresh) {
       await authService.logout(storedRefresh).catch(() => {
         // Already invalid/expired — still proceed to clear local state.
       });
     }
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    setRefreshToken(null);
     setAccessToken(null);
     setUser(null);
   }, []);
