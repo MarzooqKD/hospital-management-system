@@ -57,6 +57,7 @@ AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -120,10 +121,35 @@ USE_TZ = True
 
 
 # Static files
+# Served by whitenoise straight from the app process — the admin's only
+# static assets, no CDN needed at this scale (CLAUDE.md section 4,
+# low-bandwidth / keep-it-simple guidance).
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Render (and most PaaS hosts) terminate TLS at a proxy and forward over
+# plain HTTP, setting this header to tell Django the original request was
+# HTTPS — without it, request.is_secure() is always False behind the proxy
+# and the SECURE_SSL_REDIRECT / *_COOKIE_SECURE settings below would loop
+# or silently never apply.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+# Hardening that only makes sense once actually deployed over HTTPS — local
+# dev runs on plain http://localhost, so these would break `runserver`.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600
 
 
 # Django REST Framework

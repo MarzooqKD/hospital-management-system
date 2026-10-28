@@ -232,3 +232,12 @@ these mid-implementation; surface it instead.
       `Referral` and their RBAC grants are unaffected and remain as
       described above.
 - [ ] Phase 5 onward — see `docs/ROADMAP.md`
+- [x] Deployment (portfolio/demo scope, 2026-10-28) — Vercel (frontend) +
+      Render (backend) + Neon (Postgres), chosen specifically because
+      Render's own free Postgres expires after 30 days and Neon's doesn't.
+      `whitenoise` added for static files, `gunicorn` as the production WSGI
+      server, `SECURE_PROXY_SSL_HEADER`/`CSRF_TRUSTED_ORIGINS`/HTTPS-only
+      cookie settings added to `backend/config/settings.py` gated on
+      `DEBUG=False`. Full runbook and the free-tier caveats (cold starts, no
+      backups, synthetic data only) in `docs/DEPLOYMENT.md` — explicitly
+      scoped as demo-only, not the much larger "real hospital pilot" track.
